@@ -2,12 +2,11 @@
 import { getRouteComponents } from '@/hooks';
 import { notFound } from 'next/navigation';
 
-
-interface ViewPageProps {
+interface Props {
   params: { view: string[] };
 }
 
-export default function ViewPage({ params }: ViewPageProps) {
+export default function ViewPage({ params }: Props) {
   const path = `/${params.view.join('/')}`;
   const routes = getRouteComponents('view');
 
