@@ -1,3 +1,4 @@
+// hooks/index.tsx
 import React from 'react';
 
 type ActionConfig = {
@@ -6,8 +7,16 @@ type ActionConfig = {
   componentName?: string;
 };
 
+type RouteConfig = {
+  type: 'view' | 'admin';
+  route: string;
+  componentName: string;
+  position: number;
+};
+
 type PluginModule = {
   actions?: ActionConfig[];
+  routes?: RouteConfig[];
   [key: string]: unknown;
 };
 
@@ -20,14 +29,23 @@ const actionRegistry: Record<
   }>
 > = {};
 
-export function registerComponents(components: PluginModule) {
-  const { actions = [], ...comps } = components;
+const routeRegistry: Record<
+  string,
+  Array<{
+    component: React.ComponentType<any>;
+    route: string;
+    position: number;
+  }>
+> = { view: [], admin: [] };
 
+export function registerComponents(components: PluginModule) {
+  const { actions = [], routes = [], ...comps } = components;
+
+  // Register action components
   actions.forEach(({ hookName, position, componentName }) => {
     if (!componentName) return;
 
     const component = comps[componentName] as React.ComponentType<any> | undefined;
-
     if (!component || typeof component !== 'function') return;
 
     if (!actionRegistry[hookName]) {
@@ -35,8 +53,18 @@ export function registerComponents(components: PluginModule) {
     }
 
     actionRegistry[hookName].push({ component, position, componentName });
-
     actionRegistry[hookName].sort((a, b) => a.position - b.position);
+  });
+
+  // Register route components
+  routes.forEach(({ type, route, componentName, position }) => {
+    if (!componentName) return;
+
+    const component = comps[componentName] as React.ComponentType<any> | undefined;
+    if (!component || typeof component !== 'function') return;
+
+    routeRegistry[type].push({ component, route, position });
+    routeRegistry[type].sort((a, b) => a.position - b.position);
   });
 }
 
@@ -51,6 +79,10 @@ export const Hooks = ({ name }: { name: string }) => {
     </>
   );
 };
+
+export function getRouteComponents(type: 'view' | 'admin') {
+  return routeRegistry[type] || [];
+}
 
 // Webpack require.context type declaration
 declare const require: {
