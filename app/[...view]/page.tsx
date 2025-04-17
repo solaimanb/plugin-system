@@ -2,17 +2,13 @@
 import { getRouteComponents } from '@/hooks';
 import { notFound } from 'next/navigation';
 
-interface PageProps {
-  params: {
-    view: string[];
-  };
-  searchParams?: {
-    [key: string]: string | string[] | undefined;
-  };
+
+interface ViewPageProps {
+  params: { view: string[] };
 }
 
-export default function ViewPage({ params }: PageProps) {
-  const path = `/${params.view?.join('/') || ''}`;
+export default function ViewPage({ params }: ViewPageProps) {
+  const path = `/${params.view.join('/')}`;
   const routes = getRouteComponents('view');
 
   const route = routes.find(r => r.route === path);
@@ -24,5 +20,3 @@ export default function ViewPage({ params }: PageProps) {
   const Component = route.component;
   return <Component />;
 }
-
-export const dynamicParams = false; // Set to true if you want to allow non-registered routes
