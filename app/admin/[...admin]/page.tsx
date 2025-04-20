@@ -1,14 +1,15 @@
 // app/admin/[...admin]/page.tsx
-import { notFound } from 'next/navigation';
 import { getRouteComponents } from '@/hooks';
+import { notFound } from 'next/navigation';
 
-export default function ViewPage({ params }: { params: any }) {
-  if (!params?.view || !Array.isArray(params.view)) {
+export default function AdminPage({ params }: { params: any }) {
+  if (!params?.admin || !Array.isArray(params.admin)) {
     return notFound();
   }
 
-  const path = `/${params.view.join('/')}`;
+  const path = `/${params.admin.join('/')}`;
   const routes = getRouteComponents('admin');
+
   const route = routes.find((r) => r.route === path);
 
   if (!route) return notFound();
