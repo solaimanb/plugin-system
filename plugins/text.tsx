@@ -1,3 +1,5 @@
+//plugins/text.tsx
+
 import React from 'react';
 
 // কম্পোনেন্ট ১: হেডার ডিজাইন এ
@@ -8,5 +10,15 @@ export const hello = () => (
 );
 // একশন কনফিগারেশন
 export const actions = [
-    { hookName: 'Nex-header', position: 0, componentName: 'hello' },
+  { hookName: 'Nex-header', position: 0, componentName: 'hello' },
+];
+
+// Route registrations
+export const routes = [
+  {
+    type: 'admin',
+    route: '/blog',
+    componentName: 'hello',
+    position: 1
+  }
 ];
