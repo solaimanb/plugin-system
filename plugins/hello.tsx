@@ -25,6 +25,15 @@ export const FooterDesign = () => (
   </footer>
 );
 
+export const Meta = () => (
+  <div>
+    <h1>
+      MeTa
+    </h1>
+    <textarea rows={5} placeholder='title' className='p-2 outline-0 border w-full' />
+  </div>
+);
+
 export const ComingSoonPage = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-100">
     <div className="text-center p-8 bg-white rounded-lg shadow-xl">
@@ -56,21 +65,28 @@ export const AdminDashboard = () => (
 
 // Hook registrations
 export const actions = [
+  { hookName: 'From-left', position: 22, componentName: 'Meta' },
   { hookName: 'Nex-header', position: 1, componentName: 'HeaderDesignA' },
   { hookName: 'Nex-footer', position: 1, componentName: 'FooterDesign' }
 ];
 
 // Route registrations
 export const routes = [
-  { 
-    type: 'view', 
+  {
+    type: 'view',
     route: '/coming-soon',
     componentName: 'ComingSoonPage',
     position: 1
   },
-  { 
-    type: 'admin', 
+  {
+    type: 'admin',
     route: '/dashboard',
+    componentName: 'AdminDashboard',
+    position: 1
+  },
+  {
+    type: 'admin',
+    route: '/blog',
     componentName: 'AdminDashboard',
     position: 1
   }
