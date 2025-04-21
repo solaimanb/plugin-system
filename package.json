@@ -6,12 +6,16 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "watch": "node plugin-watcher.js",
+    "prod": "npm run watch",
     "lint": "next lint"
   },
   "dependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "next": "15.3.0"
+    "next": "15.3.0",
+    "chokidar": "^3.5.3",
+    "concurrently": "^8.2.2"
   },
   "devDependencies": {
     "typescript": "^5",
