@@ -18,6 +18,7 @@ interface PluginRoute {
 
 interface Plugin {
   name: string;
+  path: string;
   components: Record<string, React.ComponentType>;
   actions: PluginAction[];
   routes: PluginRoute[];
@@ -31,13 +32,13 @@ export const usePlugins = () => {
       try {
         // Fetch list of available plugins
         const response = await fetch('/api/plugins');
-        const pluginFiles = await response.json();
+        const pluginPaths = await response.json();
 
         // Load each plugin dynamically
         const loadedPlugins = await Promise.all(
-          pluginFiles.map(async (pluginName: string) => {
+          pluginPaths.map(async (pluginPath: string) => {
             try {
-              const module = await import(`../plugins/${pluginName}`);
+              const module = await import(`../plugins/${pluginPath}`);
               
               // Extract all exported components
               const components: Record<string, React.ComponentType> = {};
@@ -48,13 +49,14 @@ export const usePlugins = () => {
               });
 
               return {
-                name: pluginName,
+                name: pluginPath.split('/').pop() || pluginPath,
+                path: pluginPath,
                 components,
                 actions: module.actions || [],
                 routes: module.routes || []
               };
             } catch (error) {
-              console.error(`Error loading plugin ${pluginName}:`, error);
+              console.error(`Error loading plugin ${pluginPath}:`, error);
               return null;
             }
           })
@@ -80,9 +82,9 @@ export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     <>
       {children}
       {plugins.map((plugin) => (
-        <React.Fragment key={plugin.name}>
+        <React.Fragment key={plugin.path}>
           {Object.entries(plugin.components).map(([name, Component]) => (
-            <React.Fragment key={`${plugin.name}-${name}`}>
+            <React.Fragment key={`${plugin.path}-${name}`}>
               {React.createElement(Component)}
             </React.Fragment>
           ))}
