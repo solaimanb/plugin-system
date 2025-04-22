@@ -1,5 +1,4 @@
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
@@ -10,16 +9,21 @@ export async function POST(req: NextRequest) {
     return new NextResponse('Only .tsx files are allowed.', { status: 400 });
   }
 
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-
-  const filePath = path.join(process.cwd(), 'plugins', file.name);
-
   try {
-    await writeFile(filePath, buffer);
-    return NextResponse.json({ success: true });
+    // Upload to Vercel Blob Storage
+    const blob = await put(file.name, file, {
+      access: 'public',
+      addRandomSuffix: false,
+    });
+
+    // Store the blob URL in your database or return it
+    return NextResponse.json({ 
+      success: true, 
+      url: blob.url,
+      pathname: blob.pathname
+    });
   } catch (err) {
-    console.error('File write error:', err);
-    return new NextResponse('Failed to save file.', { status: 500 });
+    console.error('Upload error:', err);
+    return new NextResponse('Failed to upload file.', { status: 500 });
   }
 }

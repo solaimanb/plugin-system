@@ -38,23 +38,21 @@ export const usePlugins = () => {
         const loadedPlugins = await Promise.all(
           pluginPaths.map(async (pluginPath: string) => {
             try {
-              const module = await import(`../plugins/${pluginPath}`);
-              
-              // Extract all exported components
-              const components: Record<string, React.ComponentType> = {};
-              Object.entries(module).forEach(([key, value]) => {
-                if (typeof value === 'function' && value.prototype?.isReactComponent) {
-                  components[key] = value as React.ComponentType;
-                }
-              });
+              // In development, load from local filesystem
+              if (process.env.NODE_ENV === 'development') {
+                const module = await import(`../plugins/${pluginPath}`);
+                return {
+                  name: pluginPath.split('/').pop() || pluginPath,
+                  path: pluginPath,
+                  components: extractComponents(module),
+                  actions: module.actions || [],
+                  routes: module.routes || []
+                };
+              }
 
-              return {
-                name: pluginPath.split('/').pop() || pluginPath,
-                path: pluginPath,
-                components,
-                actions: module.actions || [],
-                routes: module.routes || []
-              };
+              // In production, load from a predefined list of plugins
+              // This should be configured in your deployment
+              return null;
             } catch (error) {
               console.error(`Error loading plugin ${pluginPath}:`, error);
               return null;
@@ -73,6 +71,17 @@ export const usePlugins = () => {
   }, []);
 
   return plugins;
+};
+
+// Helper function to extract React components from a module
+const extractComponents = (module: any): Record<string, React.ComponentType> => {
+  const components: Record<string, React.ComponentType> = {};
+  Object.entries(module).forEach(([key, value]) => {
+    if (typeof value === 'function' && value.prototype?.isReactComponent) {
+      components[key] = value as React.ComponentType;
+    }
+  });
+  return components;
 };
 
 export const PluginProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
