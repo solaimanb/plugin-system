@@ -1,4 +1,20 @@
 [
-  "hello",
-  "text"
+  {
+    "id": "hello",
+    "name": "hello",
+    "url": "/plugins/hello.tsx",
+    "createdAt": "2025-04-21T13:54:21.062Z"
+  },
+  {
+    "id": "text",
+    "name": "text",
+    "url": "/plugins/text.tsx",
+    "createdAt": "2025-04-22T11:20:19.442Z"
+  },
+  {
+    "id": "f016bc8d-d828-4105-a723-1f02d3ece30c",
+    "name": "welcome",
+    "url": "https://hrr84263fbyy5tru.public.blob.vercel-storage.com/welcome-1745334090549.tsx",
+    "createdAt": "2025-04-22T15:01:31.084Z"
+  }
 ]

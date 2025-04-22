@@ -69,6 +69,21 @@ async function startServer() {
   }
 }
 
+// Run a command and return its output
+function runCommand(command) {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error executing ${command}:`, error);
+        console.error('stderr:', stderr);
+        reject(error);
+      } else {
+        resolve(stdout);
+      }
+    });
+  });
+}
+
 // Handle changes
 async function handleChange() {
   try {
@@ -80,19 +95,26 @@ async function handleChange() {
       await killPort();
     }
     
+    // Generate plugins list
+    await runCommand("node scripts/generate-plugins.js");
+    
+    // Clean .next directory
+    await runCommand("rm -rf .next");
+    
     // Build
-    await new Promise((resolve, reject) => {
-      exec("next build", (error) => {
-        if (error) reject(error);
-        else resolve();
-      });
-    });
+    await runCommand("next build");
 
     // Start server
     await startServer();
     console.log("✅ Build and server restart successful! Changes are live.");
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ Error during rebuild:", error);
+    // Try to restart the server even if build failed
+    try {
+      await startServer();
+    } catch (serverError) {
+      console.error("❌ Failed to restart server:", serverError);
+    }
   }
 }
 

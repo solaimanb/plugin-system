@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { prisma } from '@/lib/db';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+async function triggerRebuild() {
+  try {
+    // Run the rebuild script in the background
+    const { stdout, stderr } = await execAsync('node scripts/rebuild.js');
+    console.log('Rebuild output:', stdout);
+    if (stderr) console.error('Rebuild errors:', stderr);
+    return true;
+  } catch (error) {
+    console.error('Rebuild failed:', error);
+    return false;
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,9 +54,19 @@ export async function POST(req: NextRequest) {
         }
       });
 
+      // Trigger rebuild in the background
+      triggerRebuild().then(success => {
+        if (success) {
+          console.log('Rebuild completed successfully');
+        } else {
+          console.error('Rebuild failed');
+        }
+      });
+
       return NextResponse.json({ 
         success: true,
-        plugin
+        plugin,
+        message: 'Plugin uploaded successfully. The site will update shortly.'
       });
     } catch (uploadError: any) {
       console.error('Specific upload error:', uploadError.message || uploadError);
