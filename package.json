@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/generate-plugins.js && next build",
+    "build": "prisma generate && node scripts/generate-plugins.js && next build",
     "start": "next start",
     "lint": "next lint",
     "watch": "node plugin-watcher.js",
-    "prod": "npm run build && npm run watch"
+    "prod": "npm run build && npm run start",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
