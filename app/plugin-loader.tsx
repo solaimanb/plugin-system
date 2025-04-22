@@ -38,21 +38,16 @@ export const usePlugins = () => {
         const loadedPlugins = await Promise.all(
           pluginPaths.map(async (pluginPath: string) => {
             try {
-              // In development, load from local filesystem
-              if (process.env.NODE_ENV === 'development') {
-                const module = await import(`../plugins/${pluginPath}`);
-                return {
-                  name: pluginPath.split('/').pop() || pluginPath,
-                  path: pluginPath,
-                  components: extractComponents(module),
-                  actions: module.actions || [],
-                  routes: module.routes || []
-                };
-              }
-
-              // In production, load from a predefined list of plugins
-              // This should be configured in your deployment
-              return null;
+              // Use dynamic import with a static path
+              const module = await import(`../plugins/${pluginPath}`);
+              
+              return {
+                name: pluginPath.split('/').pop() || pluginPath,
+                path: pluginPath,
+                components: extractComponents(module),
+                actions: module.actions || [],
+                routes: module.routes || []
+              };
             } catch (error) {
               console.error(`Error loading plugin ${pluginPath}:`, error);
               return null;
