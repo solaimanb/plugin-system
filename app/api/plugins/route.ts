@@ -15,6 +15,7 @@ export async function GET() {
         },
         distinct: ['name'] // Ensure no duplicate names in database results
       });
+      console.log('Loaded database plugins:', dbPlugins); // Debug log
     } catch (dbError) {
       console.warn('Database connection failed, continuing with local plugins:', dbError);
     }
@@ -25,7 +26,7 @@ export async function GET() {
         return {
           id: plugin,
           name: plugin,
-          url: `/plugins/${plugin}.tsx`,
+          url: `/plugins/${plugin}.tsx`, // Local plugin path
           createdAt: new Date().toISOString()
         };
       }
@@ -35,12 +36,18 @@ export async function GET() {
     // Create a Set of plugin names to track what we've already included
     const includedPlugins = new Set(localPlugins.map(p => p.name));
 
-    // Combine both sources, ensuring no duplicates
+    // Combine both sources, ensuring no duplicates and preserving remote URLs
     const allPlugins = [
       ...localPlugins,
-      ...dbPlugins.filter(dbPlugin => !includedPlugins.has(dbPlugin.name))
+      ...dbPlugins
+        .filter(dbPlugin => !includedPlugins.has(dbPlugin.name))
+        .map(dbPlugin => ({
+          ...dbPlugin,
+          createdAt: dbPlugin.createdAt.toISOString() // Convert Date to string
+        }))
     ];
 
+    console.log('Returning all plugins:', allPlugins); // Debug log
     return NextResponse.json(allPlugins);
   } catch (error) {
     console.error('Error in GET /api/plugins:', error);
