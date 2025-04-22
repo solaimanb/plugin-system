@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
-import plugins from './plugins.json';
+import { prisma } from '@/lib/db';
 
 export async function GET() {
   try {
+    const plugins = await prisma.plugin.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
     return NextResponse.json(plugins);
   } catch (error) {
-    console.error('Error getting plugins:', error);
-    return NextResponse.json({ error: 'Failed to get plugins' }, { status: 500 });
+    console.error('Error fetching plugins:', error);
+    return new NextResponse('Error fetching plugins', { status: 500 });
   }
 } 

@@ -1,10 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/utils/supabase';
-import type { Database } from '@/utils/supabase';
-
-type PluginFile = Database['public']['Tables']['plugins']['Row'];
+import { prisma } from '@/lib/db';
 
 interface PluginAction {
   hookName: string;
@@ -34,23 +31,17 @@ export const usePlugins = () => {
     const loadPlugins = async () => {
       try {
         // Fetch list of available plugins from database
-        const { data: pluginFiles, error: dbError } = await supabase
-          .from('plugins')
-          .select('*');
+        const response = await fetch('/api/plugins');
+        const pluginFiles = await response.json();
 
-        if (dbError) {
-          console.error('Error fetching plugins from database:', dbError);
-          return;
-        }
-
-        if (!pluginFiles) {
+        if (!pluginFiles || !Array.isArray(pluginFiles)) {
           console.warn('No plugins found in database');
           return;
         }
 
         // Load each plugin's content
         const loadedPlugins = (await Promise.all(
-          pluginFiles.map(async (file: PluginFile) => {
+          pluginFiles.map(async (file) => {
             try {
               const response = await fetch(file.url);
               if (!response.ok) {
