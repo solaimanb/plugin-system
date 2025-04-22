@@ -4,6 +4,11 @@ import { prisma } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
   try {
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error('BLOB_READ_WRITE_TOKEN is not set');
+      return new NextResponse('Server configuration error', { status: 500 });
+    }
+
     const formData = await req.formData();
     const file: File | null = formData.get('file') as File;
 
@@ -11,25 +16,43 @@ export async function POST(req: NextRequest) {
       return new NextResponse('No file provided', { status: 400 });
     }
 
-    // Upload file to Vercel Blob
-    const { url } = await put(file.name, file, {
-      access: 'public',
-    });
+    // Generate a unique filename with timestamp
+    const timestamp = Date.now();
+    const baseName = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
+    const ext = file.name.split('.').pop();
+    const uniqueFileName = `${baseName}-${timestamp}.${ext}`;
 
-    // Store in database
-    const plugin = await prisma.plugin.create({
-      data: {
-        name: file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
-        url: url
-      }
-    });
+    try {
+      // Upload file to Vercel Blob
+      const { url } = await put(uniqueFileName, file, {
+        access: 'public',
+        addRandomSuffix: false
+      });
 
-    return NextResponse.json({ 
-      success: true,
-      plugin
-    });
-  } catch (error) {
-    console.error('Upload error:', error);
-    return new NextResponse('Failed to upload file.', { status: 500 });
+      // Store in database
+      const plugin = await prisma.plugin.create({
+        data: {
+          name: baseName,
+          url: url
+        }
+      });
+
+      return NextResponse.json({ 
+        success: true,
+        plugin
+      });
+    } catch (uploadError: any) {
+      console.error('Specific upload error:', uploadError.message || uploadError);
+      return new NextResponse(
+        `Upload failed: ${uploadError.message || 'Unknown error'}`, 
+        { status: 500 }
+      );
+    }
+  } catch (error: any) {
+    console.error('General error:', error.message || error);
+    return new NextResponse(
+      `Failed to process upload: ${error.message || 'Unknown error'}`, 
+      { status: 500 }
+    );
   }
 }
