@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+import { supabase } from '@/utils/supabase';
+import type { Database } from '@/utils/supabase';
+
+type PluginFile = Database['public']['Tables']['plugins']['Row'];
 
 interface PluginAction {
   hookName: string;
@@ -30,35 +33,49 @@ export const usePlugins = () => {
   useEffect(() => {
     const loadPlugins = async () => {
       try {
-        // Fetch list of available plugins
-        const response = await fetch('/api/plugins');
-        const pluginPaths = await response.json();
+        // Fetch list of available plugins from database
+        const { data: pluginFiles, error: dbError } = await supabase
+          .from('plugins')
+          .select('*');
 
-        // Load each plugin dynamically
-        const loadedPlugins = await Promise.all(
-          pluginPaths.map(async (pluginPath: string) => {
+        if (dbError) {
+          console.error('Error fetching plugins from database:', dbError);
+          return;
+        }
+
+        if (!pluginFiles) {
+          console.warn('No plugins found in database');
+          return;
+        }
+
+        // Load each plugin's content
+        const loadedPlugins = (await Promise.all(
+          pluginFiles.map(async (file: PluginFile) => {
             try {
-              // Use dynamic import with a static path
-              const module = await import(`../plugins/${pluginPath}`);
+              const response = await fetch(file.url);
+              if (!response.ok) {
+                throw new Error(`Failed to load plugin: ${response.statusText}`);
+              }
+              const content = await response.text();
+              const module = await import(`/plugins/${file.name}.js`);
               
               return {
-                name: pluginPath.split('/').pop() || pluginPath,
-                path: pluginPath,
+                name: file.name,
+                path: file.url,
                 components: extractComponents(module),
                 actions: module.actions || [],
                 routes: module.routes || []
               };
             } catch (error) {
-              console.error(`Error loading plugin ${pluginPath}:`, error);
+              console.error(`Error loading plugin ${file.name}:`, error);
               return null;
             }
           })
-        );
+        )).filter((plugin): plugin is Plugin => plugin !== null);
 
-        // Filter out failed plugin loads
-        setPlugins(loadedPlugins.filter((plugin): plugin is Plugin => plugin !== null));
+        setPlugins(loadedPlugins);
       } catch (error) {
-        console.error('Error loading plugins:', error);
+        console.error('Error in plugin loading process:', error);
       }
     };
 

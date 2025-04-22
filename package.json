@@ -11,6 +11,7 @@
     "prod": "npm run watch"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
     "@vercel/blob": "^1.0.0",
     "next": "15.3.0",
     "react": "18.2.0",
